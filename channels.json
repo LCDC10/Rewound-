@@ -1,4 +1,3 @@
-```json
 {
   "comment": "Channels to ingest. Use YouTube handles. Run the 'Refresh corpus' GitHub Action after editing. Sample channels in the seed corpus are replaced on the first real build; channels marked keep:true (the classics) survive rebuilds.",
   "keep": "oldest",
@@ -21,7 +20,6 @@
     { "handle": "@Tobuscus" },
     { "handle": "@ERB" },
     { "handle": "@JennaMarbles" },
-
     { "handle": "@PewDiePie" },
     { "handle": "@penguinz0" },
     { "handle": "@CaptainSparklez" },
@@ -50,7 +48,6 @@
     { "handle": "@UnboxTherapy" },
     { "handle": "@RosannaPansino" },
     { "handle": "@MichellePhan" },
-
     { "handle": "@MrBeast" },
     { "handle": "@TheOdd1sOut" },
     { "handle": "@jaidenanimations" },
@@ -69,7 +66,6 @@
     { "handle": "@YesTheory" },
     { "handle": "@DailyDoseOfInternet" },
     { "handle": "@InternetHistorian" },
-
     { "handle": "@RyanTrahan" },
     { "handle": "@Airrack" },
     { "handle": "@Dream" },
