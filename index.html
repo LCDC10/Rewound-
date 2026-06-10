@@ -108,12 +108,38 @@
   .srow .t { font-size:12px; }
   .srow .m { font-size:11px; color:#666; margin-top:2px; }
 
+  .comments { margin-top:18px; }
+  .comments h3 { font-size:13px; border-bottom:1px solid #e5e5e5; padding-bottom:5px; }
+  .nocmt { color:#888; font-size:12px; padding:10px 0; }
+  .cmt { padding:8px 0; border-bottom:1px solid #f3f3f3; font-size:12px; }
+  .cmt .u { font-weight:bold; color:#0033cc; }
+  .cmt .when { color:#999; font-size:11px; margin-left:6px; }
+  .cmt .rep { float:right; font-size:10px; color:#bbb; cursor:pointer; }
+  .cmt .rep:hover { color:#c00; }
+  .future { background:#f6f6f6; border:1px dashed #ccc; border-radius:3px; color:#888; font-size:11px; padding:7px 10px; margin-top:10px; }
+  .cmtbox { display:flex; gap:6px; margin-top:12px; }
+  .cmtbox input[type=text] { flex:1; border:1px solid #999; padding:6px; font-size:12px; }
+  .cmthint { color:#999; font-size:10px; margin-top:5px; line-height:1.5; }
+
   #ftr { border-top:1px solid #ddd; margin-top:34px; padding:14px 0 30px; color:#888; font-size:11px; line-height:1.7; }
 </style>
 </head>
 <body>
 <div id="app"></div>
+
 <script src="data/corpus.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+  /* ==== Optional: community comments (free Supabase project) ====
+     1) Run supabase/schema.sql in your Supabase SQL Editor
+     2) Authentication -> Sign In / Providers -> enable Anonymous sign-ins
+     3) Paste your project values below (Settings -> API). The anon
+        public key is designed to be published — safe in this file.   */
+  window.REWOUND_CONFIG = {
+    supabaseUrl: "",      /* e.g. "https://abcd1234.supabase.co" */
+    supabaseAnonKey: ""
+  };
+</script>
 <script>
 "use strict";
 
@@ -188,7 +214,7 @@ function agoText(pub, simDate){
 
 /* ===================== persistence ===================== */
 
-const LS_ANCHOR = "rewound.anchor", LS_VISIT = "rewound.lastVisit";
+const LS_ANCHOR = "rewound.anchor", LS_VISIT = "rewound.lastVisit", LS_NAME = "rewound.name";
 
 function loadAnchor(){
   try { const a = JSON.parse(localStorage.getItem(LS_ANCHOR)); if (a && a.subs && a.simStart && a.realStart) return a; } catch {}
@@ -218,6 +244,78 @@ function copySaveLink(){
   if (navigator.clipboard?.writeText) {
     navigator.clipboard.writeText(url).then(() => alert("Save link copied! Open it on any device to continue this timeline."));
   } else { prompt("Copy your save link:", url); }
+}
+
+/* ===================== community comments (Supabase, optional) ===================== */
+
+const CFG = window.REWOUND_CONFIG || {};
+const sb = (CFG.supabaseUrl && CFG.supabaseAnonKey && window.supabase)
+  ? window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseAnonKey)
+  : null;
+
+async function ensureSession(){
+  const { data: { session } } = await sb.auth.getSession();
+  if (session) return true;
+  const { error } = await sb.auth.signInAnonymously();
+  if (error) { alert("Couldn't start a session: " + error.message); return false; }
+  return true;
+}
+function travelerName(){
+  let name = "";
+  try { name = localStorage.getItem(LS_NAME) || ""; } catch {}
+  if (!name) {
+    name = (prompt("Pick a traveler name (shown with your comments):") || "").trim().slice(0, 30);
+    if (name.length < 2) return null;
+    try { localStorage.setItem(LS_NAME, name); } catch {}
+  }
+  return name;
+}
+
+async function hydrateComments(vid){
+  const zone = document.getElementById("cmtZone");
+  if (!zone) return;
+  if (!sb) {
+    zone.innerHTML = `<div class="nocmt">Community comments are switched off in this deployment. They're free to enable — see the README.</div>`;
+    return;
+  }
+  zone.innerHTML = `<div class="nocmt">Listening for voices from your timeline…</div>`;
+  try {
+    const { data: list, error } = await sb.from("comments")
+      .select("id,author_name,body,sim_date")
+      .eq("video_id", vid).lte("sim_date", S.simToday)
+      .order("sim_date", { ascending: false }).limit(100);
+    if (error) throw error;
+    const { count } = await sb.from("comments")
+      .select("id", { count: "exact", head: true })
+      .eq("video_id", vid).gt("sim_date", S.simToday);
+    const items = (list && list.length)
+      ? list.map(c => `<div class="cmt"><span class="rep" onclick="reportComment('${c.id}')" title="Report">⚑ report</span><span class="u">${esc(c.author_name)}</span><span class="when">on ${prettyDate(c.sim_date)}</span><br>${esc(c.body)}</div>`).join("")
+      : `<div class="nocmt">No traveler has commented this far back. Leave the first note.</div>`;
+    const future = count ? `<div class="future">🔭 ${count} comment${count===1?"":"s"} from travelers further down your timeline — keep going to read ${count===1?"it":"them"}.</div>` : "";
+    zone.innerHTML = items + future + `
+      <div class="cmtbox"><input type="text" id="cmtInput" maxlength="500" placeholder="Leave a note for travelers behind you — it's ${esc(prettyDate(S.simToday))}" onkeydown="if(event.key==='Enter')submitComment('${vid}')">
+      <button class="btn" onclick="submitComment('${vid}')">Post</button></div>
+      <div class="cmthint">Comments are stamped with your simulated date. Travelers only see notes from at or before their own date — no spoilers given, none received.</div>`;
+  } catch (e) {
+    zone.innerHTML = `<div class="nocmt">Couldn't reach the comment service right now.</div>`;
+  }
+}
+async function submitComment(vid){
+  const box = document.getElementById("cmtInput");
+  const body = (box && box.value || "").trim();
+  if (!body || !sb) return;
+  const name = travelerName();
+  if (!name) return;
+  if (!await ensureSession()) return;
+  const { error } = await sb.from("comments").insert({ video_id: vid, body: body.slice(0,500), sim_date: S.simToday, author_name: name });
+  if (error) { alert("Couldn't post: " + (error.message.includes("row-level") ? "slow down a little (rate limit)." : error.message)); return; }
+  hydrateComments(vid);
+}
+async function reportComment(id){
+  if (!sb || !confirm("Report this comment to the moderators?")) return;
+  if (!await ensureSession()) return;
+  await sb.from("reports").insert({ comment_id: id });
+  alert("Thanks. Comments are hidden automatically after multiple reports.");
 }
 
 /* ===================== state ===================== */
@@ -368,6 +466,7 @@ function setupPage(){
     <div class="daterow"><input type="date" id="startDate" value="2010-10-02" min="2005-04-23" max="${todayISO()}"> ${quick}</div>
     <div style="margin-top:26px"><button class="btn btn-go" onclick="beginTimeline()">⏰ Begin my timeline</button></div>
     <div class="note">Calendar mode: open Rewound tomorrow and it's the next day there too — skip a day, you skip a day there.<br>
+    Comments from other travelers are gated by date: you only see notes written at or before your own day. No spoilers.<br>
     Sample channels are placeholders until the corpus is built from the YouTube Data API (see README). Not affiliated with YouTube.</div>
   </div>`;
 }
@@ -479,6 +578,7 @@ function watchPage(){
           <div class="ratenums">👍 ≈${fmt(likes)} &nbsp; 👎 ≈${fmt(dislikes)} &nbsp; (est.)</div></span>
         </div>
         <div class="descbox"><b>Uploaded ${prettyDate(v.date)}</b><br>${esc(v.desc || "")}</div>
+        <div class="comments"><h3>Comments from fellow travelers</h3><div id="cmtZone"></div></div>
       </div>
       <div class="sidebar side"><div class="sec"><h3>From your timeline</h3>${related || '<div class="empty">Nothing else exists yet…</div>'}</div></div>
     </div>
@@ -489,13 +589,15 @@ function footer(){
   if (S.page === "setup") return "";
   return `<div id="ftr"><div class="wrap">
     Rewound is a time-machine viewer: data refreshed weekly from the YouTube Data API, playback via YouTube's official embedded player, nothing rehosted.
-    View/subscriber figures shown with ≈ are estimates simulated for the displayed date. Deleted videos appear as unavailable. Not affiliated with YouTube.
+    View/subscriber figures shown with ≈ are estimates simulated for the displayed date. Deleted videos appear as unavailable.
+    Comments are written by Rewound travelers, stamped with their simulated date — report anything off. Not affiliated with YouTube.
   </div></div>`;
 }
 
 function renderInto(){
   const fn = { setup: setupPage, home: homePage, channel: channelPage, watch: watchPage }[S.page];
   document.getElementById("content").innerHTML = fn();
+  if (S.page === "watch" && S.watchId) hydrateComments(S.watchId);
 }
 function render(){
   document.getElementById("app").innerHTML = header() + timebar() + `<div id="content"></div>` + footer();
