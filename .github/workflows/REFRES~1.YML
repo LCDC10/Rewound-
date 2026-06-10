@@ -1,0 +1,34 @@
+name: Refresh corpus
+
+# Weekly rebuild keeps stored YouTube data fresh (complies with the
+# 30-day refresh requirement in YouTube's API Developer Policies)
+# and picks up new uploads / newly deleted videos.
+on:
+  schedule:
+    - cron: "0 6 * * 1"   # Mondays 06:00 UTC
+  workflow_dispatch: {}     # manual "Run workflow" button
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Build corpus from YouTube Data API
+        env:
+          YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+        run: node scripts/build-corpus.mjs
+
+      - name: Commit updated corpus
+        run: |
+          git config user.name "rewound-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add data/corpus.js
+          git diff --staged --quiet || (git commit -m "chore: refresh corpus $(date -u +%F)" && git push)
