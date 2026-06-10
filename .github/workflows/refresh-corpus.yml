@@ -1,12 +1,24 @@
 name: Refresh corpus
 
-# Weekly rebuild keeps stored YouTube data fresh (complies with the
-# 30-day refresh requirement in YouTube's API Developer Policies)
-# and picks up new uploads / newly deleted videos.
+# Weekly FULL rebuild keeps stored YouTube data fresh (complies with the
+# 30-day refresh requirement in YouTube's API Developer Policies) and
+# picks up new uploads / newly deleted videos.
+#
+# Manual runs can choose mode "missing" to fetch only channels that
+# aren't in the corpus yet — fast way to add channels.
 on:
   schedule:
-    - cron: "0 6 * * 1"   # Mondays 06:00 UTC
-  workflow_dispatch: {}     # manual "Run workflow" button
+    - cron: "0 6 * * 1"   # Mondays 06:00 UTC — always a full rebuild
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "full = rebuild everything · missing = only fetch new channels"
+        required: false
+        default: "full"
+        type: choice
+        options:
+          - full
+          - missing
 
 permissions:
   contents: write
@@ -24,6 +36,7 @@ jobs:
       - name: Build corpus from YouTube Data API
         env:
           YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+          BUILD_MODE: ${{ github.event.inputs.mode || 'full' }}
         run: node scripts/build-corpus.mjs
 
       - name: Commit updated corpus
@@ -31,4 +44,6 @@ jobs:
           git config user.name "rewound-bot"
           git config user.email "actions@users.noreply.github.com"
           git add data/corpus.js
-          git diff --staged --quiet || (git commit -m "chore: refresh corpus $(date -u +%F)" && git push)
+          git diff --staged --quiet || (git commit -m "chore: refresh corpus $(date -u +%F) (${BUILD_MODE:-full})" && git push)
+        env:
+          BUILD_MODE: ${{ github.event.inputs.mode || 'full' }}

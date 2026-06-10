@@ -29,6 +29,7 @@
   #timebar .wrap { display:flex; align-items:center; gap:8px; padding:6px 12px; flex-wrap:wrap; }
   #timebar .today { font-weight:bold; font-size:14px; }
   #timebar .dayn { color:#8a7a1a; font-size:11px; }
+  .grouptag { background:#e8f4ff; border:1px solid #b8d8f2; border-radius:10px; font-size:11px; padding:2px 9px; }
   .ffwd { margin-left:auto; display:flex; gap:6px; align-items:center; }
   .ffwd .lbl { font-size:10px; color:#8a7a1a; }
 
@@ -39,21 +40,31 @@
   #setup .biglogo { font-size:42px; }
   #setup .tagline { color:#666; margin:8px 0 26px; font-size:15px; }
   .steph { font-size:15px; font-weight:bold; text-align:left; max-width:780px; margin:20px auto 8px; }
-  .chgrid { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; max-width:800px; margin:0 auto; }
-  .chcard { border:1px solid #ccc; border-radius:4px; width:246px; padding:12px; text-align:left; background:#fafafa; cursor:pointer; }
-  .chcard.sel { border-color:#1a1a1a; background:#f1f1f1; box-shadow:0 0 0 1px #1a1a1a; }
-  .chcard .top { display:flex; align-items:center; gap:9px; }
+  .chsearch { display:flex; max-width:780px; margin:0 auto 8px; }
+  .chsearch input { flex:1; border:1px solid #999; padding:6px 8px; font-size:13px; }
+  .chlist { max-width:780px; margin:0 auto; border:1px solid #ccc; border-radius:3px; max-height:330px; overflow-y:auto; background:#fff; text-align:left; }
+  .chrow { display:flex; align-items:center; gap:10px; padding:7px 10px; border-bottom:1px solid #f0f0f0; cursor:pointer; }
+  .chrow:hover { background:#f6f6f6; }
+  .chrow input { margin:0; flex:none; }
+  .chrow .nm { font-size:13px; font-weight:bold; }
+  .chrow .meta { color:#777; font-size:11px; margin-top:1px; }
+  .selcount { font-size:11px; color:#666; max-width:780px; margin:6px auto 0; text-align:left; }
   .av { width:38px; height:38px; flex:none; display:flex; align-items:center; justify-content:center; font-size:20px; border:1px solid #ccc; overflow:hidden; color:#fff; }
   .av img { width:100%; height:100%; object-fit:cover; }
-  .chcard b { font-size:13px; }
-  .chcard .meta { color:#777; font-size:11px; margin-top:2px; }
-  .chcard .blurb { color:#555; font-size:11px; margin-top:8px; line-height:1.45; }
+  .chrow .av { width:28px; height:28px; font-size:15px; }
   .pill { font-size:9px; padding:1px 5px; border-radius:3px; vertical-align:1px; margin-left:5px; }
   .pill.real { background:#d9f0d9; color:#262; border:1px solid #9c9; }
   .pill.sample { background:#eef; color:#447; border:1px solid #ccd; }
   .daterow { display:flex; gap:8px; justify-content:center; align-items:center; flex-wrap:wrap; max-width:780px; margin:0 auto; }
   .daterow input[type=date] { font-size:13px; padding:4px; }
+  .daterow select { font-size:12px; padding:4px; max-width:320px; }
+  .grouprow { display:flex; gap:8px; justify-content:center; align-items:center; flex-wrap:wrap; max-width:780px; margin:0 auto; font-size:12px; color:#444; }
+  .grouprow input[type=text] { border:1px solid #999; padding:5px; font-size:12px; width:280px; }
+  .grouprow select { font-size:12px; padding:4px; }
   .note { color:#999; font-size:11px; margin-top:34px; line-height:1.7; }
+  .joinbox { border:1px solid #ccc; border-radius:6px; background:#fafafa; max-width:480px; margin:10px auto 0; padding:20px 22px; text-align:left; }
+  .joinbox h2 { margin:0 0 10px; font-size:19px; }
+  .joinbox p { font-size:12px; color:#444; line-height:1.6; margin:8px 0; }
 
   .cols { display:flex; gap:24px; padding-top:6px; flex-wrap:wrap; }
   .main { flex:1; min-width:300px; }
@@ -116,6 +127,7 @@
   .cmt .when { color:#999; font-size:11px; margin-left:6px; }
   .cmt .rep { float:right; font-size:10px; color:#bbb; cursor:pointer; }
   .cmt .rep:hover { color:#c00; }
+  .gbadge { background:#e8f4ff; border:1px solid #b8d8f2; color:#246; font-size:9px; padding:1px 5px; border-radius:3px; margin-left:6px; vertical-align:1px; }
   .future { background:#f6f6f6; border:1px dashed #ccc; border-radius:3px; color:#888; font-size:11px; padding:7px 10px; margin-top:10px; }
   .cmtbox { display:flex; gap:6px; margin-top:12px; }
   .cmtbox input[type=text] { flex:1; border:1px solid #999; padding:6px; font-size:12px; }
@@ -130,13 +142,13 @@
 <script src="data/corpus.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-  /* ==== Optional: community comments (free Supabase project) ====
-     1) Run supabase/schema.sql in your Supabase SQL Editor
+  /* ==== Optional: community features (free Supabase project) ====
+     1) Run supabase/schema.sql, then supabase/groups.sql, in the SQL Editor
      2) Authentication -> Sign In / Providers -> enable Anonymous sign-ins
-     3) Paste your project values below (Settings -> API). The anon
-        public key is designed to be published — safe in this file.   */
+     3) Paste your project values below (Settings -> Data API for the URL,
+        Settings -> API Keys for the publishable key).                    */
   window.REWOUND_CONFIG = {
-    supabaseUrl: "",      /* e.g. "https://abcd1234.supabase.co" */
+    supabaseUrl: "",      /* e.g. "https://abcd1234.supabase.co" — bare domain, no /rest/v1 */
     supabaseAnonKey: ""
   };
 </script>
@@ -245,8 +257,17 @@ function copySaveLink(){
     navigator.clipboard.writeText(url).then(() => alert("Save link copied! Open it on any device to continue this timeline."));
   } else { prompt("Copy your save link:", url); }
 }
+function inviteLink(){
+  return location.origin + location.pathname + "#g=" + S.anchor.groupId;
+}
+function copyInvite(){
+  const url = inviteLink();
+  if (navigator.clipboard?.writeText) {
+    navigator.clipboard.writeText(url).then(() => alert("Invite link copied! Anyone who opens it joins this timeline."));
+  } else { prompt("Copy the invite link:", url); }
+}
 
-/* ===================== community comments (Supabase, optional) ===================== */
+/* ===================== community backend (Supabase, optional) ===================== */
 
 const CFG = window.REWOUND_CONFIG || {};
 const sb = (CFG.supabaseUrl && CFG.supabaseAnonKey && window.supabase)
@@ -271,6 +292,8 @@ function travelerName(){
   return name;
 }
 
+/* ---------- comments ---------- */
+
 async function hydrateComments(vid){
   const zone = document.getElementById("cmtZone");
   if (!zone) return;
@@ -281,7 +304,7 @@ async function hydrateComments(vid){
   zone.innerHTML = `<div class="nocmt">Listening for voices from your timeline…</div>`;
   try {
     const { data: list, error } = await sb.from("comments")
-      .select("id,author_name,body,sim_date")
+      .select("id,author_name,body,sim_date,group_id")
       .eq("video_id", vid).lte("sim_date", S.simToday)
       .order("sim_date", { ascending: false }).limit(100);
     if (error) throw error;
@@ -289,7 +312,7 @@ async function hydrateComments(vid){
       .select("id", { count: "exact", head: true })
       .eq("video_id", vid).gt("sim_date", S.simToday);
     const items = (list && list.length)
-      ? list.map(c => `<div class="cmt"><span class="rep" onclick="reportComment('${c.id}')" title="Report">⚑ report</span><span class="u">${esc(c.author_name)}</span><span class="when">on ${prettyDate(c.sim_date)}</span><br>${esc(c.body)}</div>`).join("")
+      ? list.map(c => `<div class="cmt"><span class="rep" onclick="reportComment('${c.id}')" title="Report">⚑ report</span><span class="u">${esc(c.author_name)}</span>${c.group_id && S.anchor && c.group_id === S.anchor.groupId ? '<span class="gbadge">your group</span>' : ""}<span class="when">on ${prettyDate(c.sim_date)}</span><br>${esc(c.body)}</div>`).join("")
       : `<div class="nocmt">No traveler has commented this far back. Leave the first note.</div>`;
     const future = count ? `<div class="future">🔭 ${count} comment${count===1?"":"s"} from travelers further down your timeline — keep going to read ${count===1?"it":"them"}.</div>` : "";
     zone.innerHTML = items + future + `
@@ -307,7 +330,10 @@ async function submitComment(vid){
   const name = travelerName();
   if (!name) return;
   if (!await ensureSession()) return;
-  const { error } = await sb.from("comments").insert({ video_id: vid, body: body.slice(0,500), sim_date: S.simToday, author_name: name });
+  const { error } = await sb.from("comments").insert({
+    video_id: vid, body: body.slice(0,500), sim_date: S.simToday,
+    author_name: name, group_id: (S.anchor && S.anchor.groupId) || null
+  });
   if (error) { alert("Couldn't post: " + (error.message.includes("row-level") ? "slow down a little (rate limit)." : error.message)); return; }
   hydrateComments(vid);
 }
@@ -318,9 +344,62 @@ async function reportComment(id){
   alert("Thanks. Comments are hidden automatically after multiple reports.");
 }
 
+/* ---------- groups / events ---------- */
+
+function anchorFromGroup(g){
+  return {
+    v: 1,
+    subs: (Array.isArray(g.subs) ? g.subs : []).filter(k => chOf(k)),
+    zeroSim: g.zero_sim, simStart: g.zero_sim, realStart: g.real_start,
+    groupId: g.id, groupName: g.name, pace: g.pace === "free" ? "free" : "locked"
+  };
+}
+async function loadGroup(code){
+  if (!sb) { S.joinError = "This deployment has the community backend switched off, so event links can't be looked up here."; render(); return; }
+  try {
+    const { data, error } = await sb.from("groups").select("*").eq("id", code).single();
+    if (error || !data) throw error || new Error("not found");
+    S.groupData = data;
+    try { const { data: n } = await sb.rpc("group_member_count", { gid: code }); if (typeof n === "number" || typeof n === "string") S.groupCount = Number(n); } catch {}
+  } catch (e) {
+    S.joinError = "Event not found — the link may be wrong, or the event was removed.";
+  }
+  render();
+}
+async function joinGroup(){
+  const g = S.groupData;
+  if (!g) return;
+  if (S.anchor && !confirm("Joining replaces your current timeline. (Your old save link can restore it later.) Continue?")) return;
+  if (!await ensureSession()) return;
+  const a = anchorFromGroup(g);
+  if (!a.subs.length) { alert("None of this event's channels exist on this site's corpus."); return; }
+  try { await sb.from("group_members").upsert({ group_id: g.id }, { onConflict: "group_id,member_id", ignoreDuplicates: true }); } catch {}
+  S.anchor = a; saveAnchor(a);
+  history.replaceState(null, "", location.pathname + location.search);
+  refreshClock(false);
+  saveVisit({ real: todayISO(), sim: S.simToday });
+  S.banner = null; S.groupData = null; S.joinError = null; S.page = "home";
+  render();
+}
+function leaveGroup(){
+  if (!confirm(`Leave "${S.anchor.groupName}"? You keep your place and continue as a personal timeline.`)) return;
+  delete S.anchor.groupId; delete S.anchor.groupName; delete S.anchor.pace;
+  saveAnchor(S.anchor); render();
+}
+async function fillGroupCount(){
+  if (!sb || !S.anchor || !S.anchor.groupId) return;
+  const el = document.getElementById("mcount");
+  if (!el) return;
+  try {
+    const { data: n } = await sb.rpc("group_member_count", { gid: S.anchor.groupId });
+    el.textContent = fmt(Number(n));
+  } catch { el.textContent = "?"; }
+}
+
 /* ===================== state ===================== */
 
-const S = { page:"setup", anchor:null, simToday:null, channelKey:null, watchId:null, from:"home", q:"", banner:null };
+const S = { page:"setup", anchor:null, simToday:null, channelKey:null, watchId:null, from:"home", q:"", banner:null,
+            joinCode:null, joinError:null, groupData:null, groupCount:null };
 
 function subbed(){ return CH.filter(c => S.anchor && S.anchor.subs.includes(c.key)); }
 function subVideos(upTo){
@@ -337,6 +416,8 @@ function allVideos(upTo){
 /* ===================== boot ===================== */
 
 function boot(){
+  const g = location.hash.match(/^#g=([A-Za-z0-9]+)$/);
+  if (g) { S.page = "join"; S.joinCode = g[1]; render(); loadGroup(g[1]); return; }
   importFromHash();
   S.anchor = loadAnchor();
   if (!S.anchor) { S.page = "setup"; render(); return; }
@@ -359,20 +440,60 @@ function refreshClock(checkCatchUp){
 
 /* ===================== actions ===================== */
 
-function beginTimeline(){
-  const picked = [...document.querySelectorAll(".chcard.sel")].map(el => el.dataset.key);
+async function beginTimeline(){
+  const picked = [...document.querySelectorAll(".chk")].filter(c => c.checked).map(c => c.dataset.key);
   if (!picked.length) { alert("Pick at least one channel to follow."); return; }
   const day0 = document.getElementById("startDate").value;
   if (!day0) { alert("Pick a starting date."); return; }
-  S.anchor = { v:1, subs:picked, zeroSim:day0, simStart:day0, realStart:todayISO() };
+
+  const grpChk = document.getElementById("grpChk");
+  if (grpChk && grpChk.checked) {
+    const name = (document.getElementById("grpName").value || "").trim();
+    const pace = document.getElementById("grpPace").value === "free" ? "free" : "locked";
+    if (name.length < 2) { alert("Give the event a name."); return; }
+    if (!await ensureSession()) return;
+    const { data, error } = await sb.from("groups")
+      .insert({ name: name.slice(0,60), pace, subs: picked, zero_sim: day0, real_start: todayISO() })
+      .select().single();
+    if (error) { alert("Couldn't create the event: " + error.message); return; }
+    try { await sb.from("group_members").upsert({ group_id: data.id }, { onConflict: "group_id,member_id", ignoreDuplicates: true }); } catch {}
+    S.anchor = anchorFromGroup(data);
+  } else {
+    S.anchor = { v:1, subs:picked, zeroSim:day0, simStart:day0, realStart:todayISO() };
+  }
+
   saveAnchor(S.anchor);
   saveVisit({ real: todayISO(), sim: day0 });
   S.simToday = day0; S.banner = null; S.page = "home";
   render();
+  if (S.anchor.groupId) setTimeout(() => {
+    if (navigator.clipboard?.writeText) {
+      navigator.clipboard.writeText(inviteLink()).then(() => alert("Event created — invite link copied to your clipboard!\n\n" + inviteLink()));
+    } else { prompt("Event created! Share this invite link:", inviteLink()); }
+  }, 60);
 }
-function toggleCard(el){ el.classList.toggle("sel"); }
+function filterChannels(q){
+  q = (q || "").trim().toLowerCase();
+  document.querySelectorAll("#chList .chrow").forEach(r => {
+    r.style.display = !q || (r.dataset.name || "").includes(q) ? "flex" : "none";
+  });
+}
+function updateSelCount(){
+  const el = document.getElementById("selCount");
+  if (el) el.textContent = [...document.querySelectorAll(".chk")].filter(c => c.checked).length;
+}
+function clearChecks(){
+  document.querySelectorAll(".chk").forEach(c => { c.checked = false; });
+  updateSelCount();
+}
+function toggleGroupOpts(chk){ const o = document.getElementById("grpOpts"); if (o) o.style.display = chk.checked ? "flex" : "none"; }
 function quickDate(v){ document.getElementById("startDate").value = v; }
 function ffwd(days){
+  if (S.anchor.groupId) {
+    if (S.anchor.pace === "locked") { alert("This is a locked event — everyone moves together, one day per day."); return; }
+    if (!confirm(`Fast-forwarding leaves "${S.anchor.groupName}" — you'll continue alone from wherever you land. Continue?`)) return;
+    delete S.anchor.groupId; delete S.anchor.groupName; delete S.anchor.pace;
+  }
   S.anchor.simStart = addDaysISO(S.anchor.simStart, days);
   saveAnchor(S.anchor); refreshClock(false);
   saveVisit({ real: todayISO(), sim: S.simToday });
@@ -404,7 +525,7 @@ function setQ(val){ S.q = val.toLowerCase(); renderInto(); }
 
 function avStyle(c){ return `background:linear-gradient(135deg,${c.c1||"#555"},${c.c2||"#222"})`; }
 function avatarHtml(c, cls){
-  if (c.avatarUrl) return `<div class="av ${cls||""}"><img src="${esc(c.avatarUrl)}" alt=""></div>`;
+  if (c.avatarUrl) return `<div class="av ${cls||""}"><img loading="lazy" src="${esc(c.avatarUrl)}" alt=""></div>`;
   return `<div class="av ${cls||""}" style="${avStyle(c)}">${c.avatar || "📺"}</div>`;
 }
 function thumbHtml(v, ch){
@@ -433,42 +554,93 @@ function header(){
   </div></div>`;
 }
 function timebar(){
-  if (S.page === "setup") return "";
+  if (S.page === "setup" || S.page === "join") return "";
   const dayN = diffDays(S.anchor.zeroSim || S.anchor.simStart, S.simToday) + 1;
+  const grp = S.anchor.groupId ? `<span class="grouptag">👥 ${esc(S.anchor.groupName)}${S.anchor.pace === "locked" ? " · 🔒" : ""}</span>` : "";
+  const controls = (S.anchor.groupId && S.anchor.pace === "locked")
+    ? `<span class="ffwd"><span class="lbl">locked event pace — everyone moves together</span></span>`
+    : `<span class="ffwd"><span class="lbl">fast-forward (permanent):</span>
+        <button class="btn" onclick="ffwd(1)">+1 day</button>
+        <button class="btn" onclick="ffwd(7)">+1 week</button>
+        <button class="btn" onclick="ffwdNextUpload()">⏭ next upload</button>
+      </span>`;
   return `<div id="timebar"><div class="wrap">
     <span class="today">📅 It's ${prettyDate(S.simToday)}</span>
-    <span class="dayn">day ${fmt(dayN)} of your timeline · advances daily with the real world</span>
-    <span class="ffwd"><span class="lbl">fast-forward (permanent):</span>
-      <button class="btn" onclick="ffwd(1)">+1 day</button>
-      <button class="btn" onclick="ffwd(7)">+1 week</button>
-      <button class="btn" onclick="ffwdNextUpload()">⏭ next upload</button>
-    </span>
+    ${grp}
+    <span class="dayn">day ${fmt(dayN)} of ${S.anchor.groupId ? "the event" : "your timeline"} · advances daily with the real world</span>
+    ${controls}
   </div></div>`;
 }
 
 function setupPage(){
-  const cards = CH.map(c => `
-    <div class="chcard ${c.sample || c.keep ? "" : "sel"}" data-key="${c.key}" onclick="toggleCard(this)">
-      <div class="top">${avatarHtml(c)}
-        <div><b>${esc(c.name)}</b><span class="pill ${c.sample ? "sample" : "real"}">${c.sample ? "SAMPLE DATA" : "REAL VIDEOS"}</span>
-        <div class="meta">First upload: ${prettyDate(firstUpload(c))}${firstSurviving(c) !== firstUpload(c) ? " · first surviving: " + prettyDate(firstSurviving(c)) : ""}</div></div>
-      </div>
-      <div class="blurb">${esc(c.blurb || "")}</div>
-    </div>`).join("");
-  const quick = CH.slice(0, 4).map(c =>
-    `<button class="btn" onclick="quickDate('${firstSurviving(c)}')">${esc(c.name)}'s day one</button>`).join(" ");
+  const sorted = [...CH].sort((a,b) => a.name.localeCompare(b.name));
+  const rows = sorted.map(c => `
+    <label class="chrow" data-name="${esc(c.name.toLowerCase())}">
+      <input type="checkbox" class="chk" data-key="${c.key}" onchange="updateSelCount()">
+      ${avatarHtml(c)}
+      <span><span class="nm">${esc(c.name)}</span><span class="pill ${c.sample ? "sample" : "real"}">${c.sample ? "SAMPLE" : "REAL"}</span>
+      <div class="meta">first upload ${prettyDate(firstUpload(c))}${firstSurviving(c) !== firstUpload(c) ? " · survives from " + prettyDate(firstSurviving(c)) : ""}</div></span>
+    </label>`).join("");
+  const dayOneOpts = sorted.map(c => `<option value="${firstSurviving(c)}">${esc(c.name)} — ${prettyDate(firstSurviving(c))}</option>`).join("");
+  const groupSection = sb ? `
+    <div class="steph">3. Optional: make it a group event</div>
+    <div class="grouprow">
+      <label><input type="checkbox" id="grpChk" onchange="toggleGroupOpts(this)"> Create a shared timeline others can join with a link</label>
+      <span id="grpOpts" style="display:none;gap:8px;align-items:center;flex-wrap:wrap">
+        <input type="text" id="grpName" maxlength="60" placeholder="Event name — e.g. Class of October 2010">
+        <select id="grpPace">
+          <option value="locked">🔒 Locked pace — everyone moves together</option>
+          <option value="free">🕊️ Free pace — fast-forward forks you off</option>
+        </select>
+      </span>
+    </div>` : "";
   return `<div id="setup" class="wrap">
     <div class="logo biglogo"><span class="arrow">⏪</span> <span class="rw">Rewound</span></div>
     <div class="tagline">Subscribe like it's day one. Time moves forward one real day at a time.</div>
-    <div class="steph">1. Pick your subscriptions</div>
-    <div class="chgrid">${cards}</div>
+    <div class="steph">1. Pick your subscriptions <span style="color:#999;font-weight:normal;font-size:11px">(${CH.length} channels)</span></div>
+    <div class="chsearch"><input id="chFilter" placeholder="Search channels…" oninput="filterChannels(this.value)"></div>
+    <div class="chlist" id="chList">${rows}</div>
+    <div class="selcount"><b><span id="selCount">0</span></b> selected · <a href="#" onclick="clearChecks();return false;">clear</a></div>
     <div class="steph">2. Pick your day zero</div>
-    <div class="daterow"><input type="date" id="startDate" value="2010-10-02" min="2005-04-23" max="${todayISO()}"> ${quick}</div>
-    <div style="margin-top:26px"><button class="btn btn-go" onclick="beginTimeline()">⏰ Begin my timeline</button></div>
+    <div class="daterow">
+      <input type="date" id="startDate" value="2010-10-02" min="2005-04-23" max="${todayISO()}">
+      <select onchange="if(this.value){quickDate(this.value);this.selectedIndex=0;}">
+        <option value="">Jump to a channel's day one…</option>
+        ${dayOneOpts}
+      </select>
+      <button class="btn" onclick="quickDate('2005-04-23')">YouTube's first video</button>
+    </div>
+    ${groupSection}
+    <div style="margin-top:26px"><button class="btn btn-go" onclick="beginTimeline()">⏰ Begin</button></div>
     <div class="note">Calendar mode: open Rewound tomorrow and it's the next day there too — skip a day, you skip a day there.<br>
     Comments from other travelers are gated by date: you only see notes written at or before your own day. No spoilers.<br>
-    Sample channels are placeholders until the corpus is built from the YouTube Data API (see README). Not affiliated with YouTube.</div>
+    Not affiliated with YouTube.</div>
   </div>`;
+}
+
+function joinPage(){
+  const logo = `<div class="logo biglogo"><span class="arrow">⏪</span> <span class="rw">Rewound</span></div>`;
+  if (S.joinError) return `<div id="setup" class="wrap">${logo}
+    <div class="empty">${esc(S.joinError)}</div>
+    <p><a href="${location.pathname}">Start your own timeline →</a></p></div>`;
+  if (!S.groupData) return `<div id="setup" class="wrap">${logo}<div class="empty">Looking up the event…</div></div>`;
+  const g = S.groupData;
+  const a = anchorFromGroup(g);
+  const sim = computeSimToday(a, todayISO());
+  const dayN = diffDays(g.zero_sim, sim) + 1;
+  const chips = a.subs.map(k => esc(chOf(k).name)).join(", ") || "—";
+  return `<div id="setup" class="wrap">${logo}
+    <div class="joinbox">
+      <h2>👥 ${esc(g.name)}</h2>
+      <p>You've been invited to a shared timeline. Day zero is <b>${prettyDate(g.zero_sim)}</b>, and the group is currently on <b>day ${fmt(dayN)} — ${prettyDate(sim)}</b>. Joining puts you exactly in step with everyone else.</p>
+      <p><b>Channels:</b> ${chips}</p>
+      <p>${g.pace === "free"
+        ? "🕊️ <b>Free pace</b> — you may fast-forward, which forks you onto your own branch."
+        : "🔒 <b>Locked pace</b> — no fast-forward; everyone experiences each day together."}</p>
+      <p><b>${S.groupCount !== null ? fmt(S.groupCount) : "…"}</b> traveler${S.groupCount === 1 ? "" : "s"} so far.</p>
+      <p style="margin-top:14px"><button class="btn btn-go" onclick="joinGroup()">Join this timeline</button></p>
+      <p><a href="${location.pathname}">No thanks — start my own →</a></p>
+    </div></div>`;
 }
 
 function bannerHtml(){
@@ -484,19 +656,29 @@ function homePage(){
   const popular = allVideos(S.simToday).map(v => ({ ...v, sv: simViews(v, S.simToday) }))
     .sort((a,b) => b.sv - a.sv).slice(0, 6);
   const future = subbed().flatMap(c => c.videos.filter(v => !v.gone).map(v => ({ d:v.date, n:c.name }))).filter(x => x.d > S.simToday).sort((a,b) => a.d < b.d ? -1 : 1);
-  const nextHint = future.length ? `<div class="hint">⏳ Next upload from your subscriptions: <b>${esc(future[0].n)}</b> in ${diffDays(S.simToday, future[0].d)} day${diffDays(S.simToday, future[0].d)===1?"":"s"} — or fast-forward to it.</div>` : "";
+  const ffNote = (S.anchor.groupId && S.anchor.pace === "locked") ? "" : " — or fast-forward to it";
+  const nextHint = future.length ? `<div class="hint">⏳ Next upload from your subscriptions: <b>${esc(future[0].n)}</b> in ${diffDays(S.simToday, future[0].d)} day${diffDays(S.simToday, future[0].d)===1?"":"s"}${ffNote}.</div>` : "";
 
   const newSec = todayVids.length
     ? todayVids.map(v => vrow(v, v._ch, true)).join("")
     : `<div class="empty">No uploads from your subscriptions today.</div>${nextHint}`;
 
-  const channels = CH.map(c => {
+  const channels = subbed().map(c => {
     const started = firstUpload(c) <= S.simToday;
-    const isSub = S.anchor.subs.includes(c.key);
     return `<div class="chiprow" onclick="openChannel('${c.key}')">${avatarHtml(c)}
       <span class="nm">${esc(c.name)}</span>
-      <span class="st">${isSub ? "✓ subscribed" : started ? "" : "not yet…"}</span></div>`;
+      <span class="st">${started ? "✓" : "not yet…"}</span></div>`;
   }).join("");
+  const discover = CH.filter(c => !S.anchor.subs.includes(c.key)).slice(0, 6).map(c =>
+    `<div class="chiprow" onclick="openChannel('${c.key}')">${avatarHtml(c)}<span class="nm">${esc(c.name)}</span></div>`).join("");
+
+  const groupBox = S.anchor.groupId ? `
+    <div class="sidebox"><h4>👥 ${esc(S.anchor.groupName)}</h4>
+      <p>${S.anchor.pace === "locked" ? "🔒 Locked pace — the whole group moves together, one day per day." : "🕊️ Free pace — fast-forwarding forks you onto your own branch."}</p>
+      <p><b><span id="mcount">…</span></b> traveler(s) on this timeline.</p>
+      <p><button class="btn" onclick="copyInvite()">📨 Copy invite link</button></p>
+      <p><a href="#" onclick="leaveGroup();return false;">Leave event (keep my place)</a></p>
+    </div>` : "";
 
   return `<div class="wrap">${bannerHtml()}
     <div class="cols">
@@ -506,7 +688,9 @@ function homePage(){
         <div class="sec"><h3>Popular right now</h3>${popular.map(v => vrow(v, v._ch, true)).join("")}</div>
       </div>
       <div class="side">
-        <div class="sidebox"><h4>Channels</h4>${channels}</div>
+        ${groupBox}
+        <div class="sidebox"><h4>Your subscriptions</h4>${channels || '<p>None yet.</p>'}</div>
+        <div class="sidebox"><h4>Discover</h4>${discover || '<p>You follow everything!</p>'}</div>
         <div class="sidebox"><h4>Your timeline</h4>
           <p>Started ${prettyDate(S.anchor.zeroSim || S.anchor.simStart)} · calendar mode.</p>
           <p><button class="btn" onclick="copySaveLink()">📎 Copy save link</button></p>
@@ -531,13 +715,14 @@ function channelPage(){
   const subs = subsAt(c, S.simToday);
   const lost = c.videos.filter(v => v.gone && v.date <= S.simToday).length;
   return `<div class="wrap">
+    <div style="font-size:11px;padding-top:10px"><a href="#" onclick="goHome();return false;">« Home</a></div>
     <div class="chhead">${avatarHtml(c)}
       <div><h2>${esc(c.name)}</h2>
       <div class="stats">${started ? `${subs ? "≈" + fmt(subs) + " subscribers (est.) · " : ""}${vids.filter(v=>!v.gone).length} videos${lost ? ` · ${lost} lost to time` : ""}` : `Doesn't exist yet — first upload ${prettyDate(firstUpload(c))}`}</div></div>
       <span style="margin-left:auto"><button class="btn btn-sub ${isSub ? "on" : ""}" onclick="toggleSub('${c.key}')">${isSub ? "✓ Subscribed" : "Subscribe"}</button></span>
     </div>
     ${c.sample ? `<div class="sampletag">ℹ️ Sample data. Run the "Refresh corpus" GitHub Action with your API key to replace this with the channel's real uploads.</div>` : ""}
-    ${vids.length ? vids.map(v => vrow(v, c, false)).join("") : `<div class="empty">${started ? "No uploads match." : "Come back when their first video drops — or fast-forward to it."}</div>`}
+    ${vids.length ? vids.map(v => vrow(v, c, false)).join("") : `<div class="empty">${started ? "No uploads match." : "Come back when their first video drops."}</div>`}
   </div>`;
 }
 
@@ -586,7 +771,7 @@ function watchPage(){
 }
 
 function footer(){
-  if (S.page === "setup") return "";
+  if (S.page === "setup" || S.page === "join") return "";
   return `<div id="ftr"><div class="wrap">
     Rewound is a time-machine viewer: data refreshed weekly from the YouTube Data API, playback via YouTube's official embedded player, nothing rehosted.
     View/subscriber figures shown with ≈ are estimates simulated for the displayed date. Deleted videos appear as unavailable.
@@ -595,9 +780,11 @@ function footer(){
 }
 
 function renderInto(){
-  const fn = { setup: setupPage, home: homePage, channel: channelPage, watch: watchPage }[S.page];
+  const fn = { setup: setupPage, join: joinPage, home: homePage, channel: channelPage, watch: watchPage }[S.page];
   document.getElementById("content").innerHTML = fn();
+  if (S.page === "setup") updateSelCount();
   if (S.page === "watch" && S.watchId) hydrateComments(S.watchId);
+  if (S.page === "home" && S.anchor && S.anchor.groupId) fillGroupCount();
 }
 function render(){
   document.getElementById("app").innerHTML = header() + timebar() + `<div id="content"></div>` + footer();
