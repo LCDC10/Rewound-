@@ -1,0 +1,12 @@
+{
+  "comment": "Channels to ingest. Use YouTube handles. Run the 'Refresh corpus' GitHub Action after editing. Sample channels in the seed corpus are replaced on the first real build; channels marked keep:true (the classics) survive rebuilds.",
+  "maxVideosPerChannel": 2000,
+  "channels": [
+    { "handle": "@penguinz0" },
+    { "handle": "@PewDiePie" },
+    { "handle": "@smosh" },
+    { "handle": "@nigahiga" },
+    { "handle": "@rhettandlink" },
+    { "handle": "@GoodMythicalMorning" }
+  ]
+}

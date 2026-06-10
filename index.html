@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rewound — watch the internet like it's then</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: Arial, Helvetica, sans-serif; font-size:13px; color:#111; background:#fff; }
+  a { color:#0033cc; text-decoration:none; }
+  a:hover { text-decoration:underline; }
+  .wrap { max-width:1000px; margin:0 auto; padding:0 12px; }
+  .btn { border:1px solid #aaa; background:linear-gradient(#fdfdfd,#ddd); border-radius:2px; padding:3px 9px; font-size:12px; cursor:pointer; }
+  .btn:active { background:#ccc; }
+  .btn-go { background:#1a1a1a; color:#fff; border-color:#000; font-weight:bold; padding:7px 20px; font-size:14px; border-radius:3px; }
+  .btn-sub { background:linear-gradient(#ffe14d,#f2b600); border-color:#c79406; font-weight:bold; }
+  .btn-sub.on { background:#e9e9e9; font-weight:normal; }
+
+  #hdr { border-bottom:1px solid #ccc; }
+  #hdr .wrap { display:flex; align-items:center; gap:14px; padding:9px 12px; flex-wrap:wrap; }
+  .logo { font-size:21px; font-weight:bold; letter-spacing:-0.5px; cursor:pointer; white-space:nowrap; }
+  .logo .rw { color:#1a1a1a; } .logo .arrow { color:#c00; }
+  .logo .tag { font-size:10px; color:#999; font-weight:normal; letter-spacing:0; display:block; margin-top:-2px; }
+  .searchbox { flex:1; display:flex; min-width:180px; }
+  .searchbox input { flex:1; border:1px solid #999; padding:4px 6px; font-size:13px; }
+  .searchbox button { border:1px solid #999; border-left:none; background:linear-gradient(#f8f8f8,#ddd); padding:4px 14px; cursor:pointer; }
+
+  #timebar { background:#fffbcc; border-bottom:1px solid #e0d68a; position:sticky; top:0; z-index:5; }
+  #timebar .wrap { display:flex; align-items:center; gap:8px; padding:6px 12px; flex-wrap:wrap; }
+  #timebar .today { font-weight:bold; font-size:14px; }
+  #timebar .dayn { color:#8a7a1a; font-size:11px; }
+  .ffwd { margin-left:auto; display:flex; gap:6px; align-items:center; }
+  .ffwd .lbl { font-size:10px; color:#8a7a1a; }
+
+  #banner { background:#e8f4ff; border:1px solid #b8d8f2; border-radius:4px; padding:9px 12px; margin:12px 0 0; font-size:12px; display:flex; gap:10px; align-items:center; }
+  #banner .x { margin-left:auto; cursor:pointer; color:#888; }
+
+  #setup { padding:30px 12px 36px; text-align:center; }
+  #setup .biglogo { font-size:42px; }
+  #setup .tagline { color:#666; margin:8px 0 26px; font-size:15px; }
+  .steph { font-size:15px; font-weight:bold; text-align:left; max-width:780px; margin:20px auto 8px; }
+  .chgrid { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; max-width:800px; margin:0 auto; }
+  .chcard { border:1px solid #ccc; border-radius:4px; width:246px; padding:12px; text-align:left; background:#fafafa; cursor:pointer; }
+  .chcard.sel { border-color:#1a1a1a; background:#f1f1f1; box-shadow:0 0 0 1px #1a1a1a; }
+  .chcard .top { display:flex; align-items:center; gap:9px; }
+  .av { width:38px; height:38px; flex:none; display:flex; align-items:center; justify-content:center; font-size:20px; border:1px solid #ccc; overflow:hidden; color:#fff; }
+  .av img { width:100%; height:100%; object-fit:cover; }
+  .chcard b { font-size:13px; }
+  .chcard .meta { color:#777; font-size:11px; margin-top:2px; }
+  .chcard .blurb { color:#555; font-size:11px; margin-top:8px; line-height:1.45; }
+  .pill { font-size:9px; padding:1px 5px; border-radius:3px; vertical-align:1px; margin-left:5px; }
+  .pill.real { background:#d9f0d9; color:#262; border:1px solid #9c9; }
+  .pill.sample { background:#eef; color:#447; border:1px solid #ccd; }
+  .daterow { display:flex; gap:8px; justify-content:center; align-items:center; flex-wrap:wrap; max-width:780px; margin:0 auto; }
+  .daterow input[type=date] { font-size:13px; padding:4px; }
+  .note { color:#999; font-size:11px; margin-top:34px; line-height:1.7; }
+
+  .cols { display:flex; gap:24px; padding-top:6px; flex-wrap:wrap; }
+  .main { flex:1; min-width:300px; }
+  .side { width:270px; flex:none; }
+  .sec h3 { font-size:14px; border-bottom:1px solid #e0e0e0; padding-bottom:5px; margin:18px 0 6px; }
+  .vrow { display:flex; gap:12px; padding:9px 0; border-bottom:1px solid #f0f0f0; }
+  .thumb { width:120px; height:90px; flex:none; background:#000; cursor:pointer; position:relative; }
+  .thumb img { width:120px; height:90px; object-fit:cover; display:block; }
+  .thumb-ph { width:120px; height:90px; display:flex; align-items:center; justify-content:center; font-size:32px; color:#fff; }
+  .thumb-gone { width:120px; height:90px; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#e9e9e9; color:#999; font-size:10px; gap:4px; cursor:default; }
+  .thumb-gone .x { font-size:20px; }
+  .vinfo .t { font-weight:bold; font-size:13px; }
+  .vinfo .t.gone { color:#999; font-weight:normal; cursor:default; }
+  .vinfo .m { color:#666; font-size:11px; margin-top:3px; }
+  .vinfo .d { color:#888; font-size:11px; margin-top:4px; max-width:560px; }
+  .newbadge { background:#c00; color:#fff; font-size:9px; padding:1px 4px; border-radius:2px; margin-left:5px; vertical-align:1px; }
+  .empty { padding:24px 0; color:#666; line-height:1.7; }
+  .hint { background:#f6f6f6; border:1px solid #e5e5e5; border-radius:3px; padding:8px 10px; color:#555; font-size:12px; }
+
+  .sidebox { border:1px solid #ddd; border-radius:4px; padding:11px; margin-bottom:14px; background:#fafafa; }
+  .sidebox h4 { margin:0 0 8px; font-size:12px; }
+  .chiprow { display:flex; align-items:center; gap:8px; padding:5px 0; cursor:pointer; }
+  .chiprow .av { width:24px; height:24px; font-size:13px; }
+  .chiprow .nm { font-size:12px; }
+  .chiprow .st { margin-left:auto; font-size:10px; color:#999; }
+  .sidebox p { font-size:11px; color:#666; line-height:1.55; margin:6px 0; }
+
+  .chhead { display:flex; align-items:center; gap:14px; padding:14px 0; border-bottom:1px solid #ddd; }
+  .chhead .av { width:60px; height:60px; font-size:30px; }
+  .chhead h2 { margin:0; font-size:19px; }
+  .chhead .stats { color:#666; font-size:12px; margin-top:2px; }
+  .sampletag { background:#eef; border:1px solid #ccd; color:#447; font-size:11px; padding:6px 9px; border-radius:3px; margin:10px 0; }
+
+  .watch { display:flex; gap:20px; padding-top:14px; flex-wrap:wrap; }
+  .wmain { flex:1; min-width:300px; max-width:640px; }
+  .wmain h1 { font-size:18px; margin:0 0 8px; }
+  .player { width:100%; aspect-ratio:16/10; background:#000; border:1px solid #ccc; }
+  .player iframe { width:100%; height:100%; border:0; }
+  .player .ph { width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; font-size:13px; gap:10px; text-align:center; padding:0 20px; color:#eee; }
+  .player .ph .e { font-size:50px; }
+  .player .ph.gone { background:#222; color:#aaa; }
+  .statrow { display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid #e5e5e5; padding:8px 0; flex-wrap:wrap; gap:8px; }
+  .views { font-size:16px; font-weight:bold; color:#333; }
+  .views .est { font-size:10px; color:#999; font-weight:normal; }
+  .ratebar { width:160px; height:7px; background:#cd332d; border-radius:2px; overflow:hidden; }
+  .ratebar div { height:100%; background:#88c057; }
+  .ratenums { font-size:11px; color:#666; margin-top:3px; }
+  .descbox { background:#f6f6f6; border:1px solid #e5e5e5; padding:9px; font-size:12px; color:#444; margin-top:10px; line-height:1.5; }
+  .srow { display:flex; gap:8px; margin-bottom:9px; }
+  .srow .thumb, .srow .thumb-ph, .srow .thumb-gone { width:90px; height:68px; font-size:22px; }
+  .srow .thumb img { width:90px; height:68px; }
+  .srow .t { font-size:12px; }
+  .srow .m { font-size:11px; color:#666; margin-top:2px; }
+
+  #ftr { border-top:1px solid #ddd; margin-top:34px; padding:14px 0 30px; color:#888; font-size:11px; line-height:1.7; }
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script src="data/corpus.js"></script>
+<script>
+"use strict";
+
+/* ===================== date helpers (timezone-safe, string-based) ===================== */
+
+function todayISO(){
+  if (window.__TEST_TODAY) return window.__TEST_TODAY;       // test hook
+  const n = new Date();
+  return n.getFullYear() + "-" + String(n.getMonth()+1).padStart(2,"0") + "-" + String(n.getDate()).padStart(2,"0");
+}
+function addDaysISO(iso, n){
+  const [y,m,dd] = iso.split("-").map(Number);
+  return new Date(Date.UTC(y, m-1, dd + n, 12)).toISOString().slice(0,10);
+}
+function diffDays(a, b){
+  const pa = a.split("-").map(Number), pb = b.split("-").map(Number);
+  return Math.round((Date.UTC(pb[0],pb[1]-1,pb[2]) - Date.UTC(pa[0],pa[1]-1,pa[2])) / 864e5);
+}
+function prettyDate(iso){
+  const [y,m,dd] = iso.split("-").map(Number);
+  return new Date(Date.UTC(y, m-1, dd, 12)).toLocaleDateString("en-US",{year:"numeric",month:"long",day:"numeric",timeZone:"UTC"});
+}
+function computeSimToday(anchor, today){
+  let sim = addDaysISO(anchor.simStart, diffDays(anchor.realStart, today));
+  if (sim > today) sim = today;   // can't outrun the present
+  return sim;
+}
+
+/* ===================== misc helpers ===================== */
+
+function hash(s){ let h=0; for(let i=0;i<s.length;i++){ h=(h*31+s.charCodeAt(i))|0; } return Math.abs(h); }
+function rnd(seed){ return (hash(seed)%1000)/1000; }
+function fmt(n){ return n.toLocaleString("en-US"); }
+function esc(s){ return String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
+
+const CH = (window.CORPUS && window.CORPUS.channels) || [];
+function chOf(key){ return CH.find(c => c.key === key); }
+function chOfVideo(vid){ return CH.find(c => c.videos.some(v => v.id === vid)); }
+function findVideo(id){ for (const c of CH){ const v = c.videos.find(x => x.id === id); if (v) return v; } return null; }
+function firstUpload(ch){ return ch.videos.map(v => v.date).sort()[0]; }
+function firstSurviving(ch){ const s = ch.videos.filter(v => !v.gone).map(v => v.date).sort(); return s[0] || firstUpload(ch); }
+
+/* est. view count back-simulated from today's total (deterministic, labeled as estimate in UI) */
+function simViews(v, simDate){
+  if (v.gone || !v.nowViews) return 0;
+  const total = diffDays(v.date, todayISO());
+  const elapsed = diffDays(v.date, simDate);
+  if (elapsed < 0) return 0;
+  const t = total > 0 ? elapsed / total : 1;
+  const f = 1 - Math.exp(-2.6 * t);
+  const views = Math.round(v.nowViews * f * (0.85 + rnd(v.id) * 0.3));
+  return Math.max(Math.min(views, v.nowViews), Math.round(80 + rnd(v.id+"f") * 400));
+}
+function subsAt(ch, simDate){
+  if (!ch.subsNow) return null;
+  const start = firstUpload(ch);
+  const total = diffDays(start, todayISO()), elapsed = diffDays(start, simDate);
+  if (elapsed < 0 || total <= 0) return 0;
+  const t = Math.min(1, elapsed / total);
+  return Math.round(ch.subsNow * Math.pow(t, ch.subsExp || 1.5)) + 1;
+}
+function agoText(pub, simDate){
+  const days = diffDays(pub, simDate);
+  if (days <= 0) return "today";
+  if (days === 1) return "1 day ago";
+  if (days < 7) return days + " days ago";
+  if (days < 31) return Math.floor(days/7) + (days < 14 ? " week ago" : " weeks ago");
+  if (days < 365) return Math.floor(days/30) + (days < 60 ? " month ago" : " months ago");
+  const y = Math.floor(days/365);
+  return y + (y === 1 ? " year ago" : " years ago");
+}
+
+/* ===================== persistence ===================== */
+
+const LS_ANCHOR = "rewound.anchor", LS_VISIT = "rewound.lastVisit";
+
+function loadAnchor(){
+  try { const a = JSON.parse(localStorage.getItem(LS_ANCHOR)); if (a && a.subs && a.simStart && a.realStart) return a; } catch {}
+  return null;
+}
+function saveAnchor(a){ try { localStorage.setItem(LS_ANCHOR, JSON.stringify(a)); } catch {} }
+function loadVisit(){ try { return JSON.parse(localStorage.getItem(LS_VISIT)); } catch { return null; } }
+function saveVisit(v){ try { localStorage.setItem(LS_VISIT, JSON.stringify(v)); } catch {} }
+
+function importFromHash(){
+  if (!location.hash.startsWith("#save=")) return false;
+  try {
+    const a = JSON.parse(decodeURIComponent(location.hash.slice(6)));
+    if (a && a.subs && a.simStart && a.realStart) {
+      saveAnchor(a);
+      history.replaceState(null, "", location.pathname + location.search);
+      return true;
+    }
+  } catch {}
+  return false;
+}
+function saveLink(){
+  return location.origin + location.pathname + "#save=" + encodeURIComponent(JSON.stringify(S.anchor));
+}
+function copySaveLink(){
+  const url = saveLink();
+  if (navigator.clipboard?.writeText) {
+    navigator.clipboard.writeText(url).then(() => alert("Save link copied! Open it on any device to continue this timeline."));
+  } else { prompt("Copy your save link:", url); }
+}
+
+/* ===================== state ===================== */
+
+const S = { page:"setup", anchor:null, simToday:null, channelKey:null, watchId:null, from:"home", q:"", banner:null };
+
+function subbed(){ return CH.filter(c => S.anchor && S.anchor.subs.includes(c.key)); }
+function subVideos(upTo){
+  const out = [];
+  for (const c of subbed()) for (const v of c.videos) if (v.date <= upTo) out.push({ ...v, _ch:c });
+  return out.sort((a,b) => a.date < b.date ? 1 : -1);
+}
+function allVideos(upTo){
+  const out = [];
+  for (const c of CH) for (const v of c.videos) if (v.date <= upTo && !v.gone) out.push({ ...v, _ch:c });
+  return out;
+}
+
+/* ===================== boot ===================== */
+
+function boot(){
+  importFromHash();
+  S.anchor = loadAnchor();
+  if (!S.anchor) { S.page = "setup"; render(); return; }
+  refreshClock(true);
+  S.page = "home";
+  render();
+}
+function refreshClock(checkCatchUp){
+  const today = todayISO();
+  S.simToday = computeSimToday(S.anchor, today);
+  if (checkCatchUp) {
+    const visit = loadVisit();
+    if (visit && visit.real < today && visit.sim < S.simToday) {
+      const missed = subVideos(S.simToday).filter(v => v.date > visit.sim && !v.gone);
+      if (missed.length) S.banner = { count: missed.length, since: visit.sim, days: diffDays(visit.sim, S.simToday) };
+    }
+    saveVisit({ real: today, sim: S.simToday });
+  }
+}
+
+/* ===================== actions ===================== */
+
+function beginTimeline(){
+  const picked = [...document.querySelectorAll(".chcard.sel")].map(el => el.dataset.key);
+  if (!picked.length) { alert("Pick at least one channel to follow."); return; }
+  const day0 = document.getElementById("startDate").value;
+  if (!day0) { alert("Pick a starting date."); return; }
+  S.anchor = { v:1, subs:picked, zeroSim:day0, simStart:day0, realStart:todayISO() };
+  saveAnchor(S.anchor);
+  saveVisit({ real: todayISO(), sim: day0 });
+  S.simToday = day0; S.banner = null; S.page = "home";
+  render();
+}
+function toggleCard(el){ el.classList.toggle("sel"); }
+function quickDate(v){ document.getElementById("startDate").value = v; }
+function ffwd(days){
+  S.anchor.simStart = addDaysISO(S.anchor.simStart, days);
+  saveAnchor(S.anchor); refreshClock(false);
+  saveVisit({ real: todayISO(), sim: S.simToday });
+  render();
+}
+function ffwdNextUpload(){
+  const future = subbed().flatMap(c => c.videos.filter(v => !v.gone).map(v => v.date)).filter(dt => dt > S.simToday).sort();
+  if (!future.length) { alert("No more uploads ahead in your subscriptions."); return; }
+  ffwd(diffDays(S.simToday, future[0]));
+}
+function goHome(){ S.page = S.anchor ? "home" : "setup"; S.channelKey = null; S.q = ""; render(); }
+function openChannel(key){ S.page="channel"; S.channelKey=key; S.q=""; render(); window.scrollTo(0,0); }
+function openVideo(id){ const v = findVideo(id); if (!v || v.gone) return; S.from = S.page; S.watchId = id; S.page = "watch"; render(); window.scrollTo(0,0); }
+function goBack(){ S.page = (S.from === "channel" && S.channelKey) ? "channel" : "home"; S.watchId = null; render(); }
+function toggleSub(key){
+  const i = S.anchor.subs.indexOf(key);
+  if (i >= 0) S.anchor.subs.splice(i, 1); else S.anchor.subs.push(key);
+  saveAnchor(S.anchor); render();
+}
+function dismissBanner(){ S.banner = null; render(); }
+function resetTimeline(){
+  if (!confirm("End this timeline and start over? Your save link can restore it later.")) return;
+  localStorage.removeItem(LS_ANCHOR); localStorage.removeItem(LS_VISIT);
+  S.anchor = null; S.page = "setup"; render();
+}
+function setQ(val){ S.q = val.toLowerCase(); renderInto(); }
+
+/* ===================== rendering ===================== */
+
+function avStyle(c){ return `background:linear-gradient(135deg,${c.c1||"#555"},${c.c2||"#222"})`; }
+function avatarHtml(c, cls){
+  if (c.avatarUrl) return `<div class="av ${cls||""}"><img src="${esc(c.avatarUrl)}" alt=""></div>`;
+  return `<div class="av ${cls||""}" style="${avStyle(c)}">${c.avatar || "📺"}</div>`;
+}
+function thumbHtml(v, ch){
+  if (v.gone) return `<div class="thumb-gone"><span class="x">✖</span>no longer available</div>`;
+  if (ch.real) return `<div class="thumb" onclick="openVideo('${v.id}')"><img loading="lazy" src="https://i.ytimg.com/vi/${v.id}/hqdefault.jpg" alt=""></div>`;
+  return `<div class="thumb" onclick="openVideo('${v.id}')"><div class="thumb-ph" style="${avStyle(ch)}">${v.e || "🎬"}</div></div>`;
+}
+function vrow(v, ch, showCh){
+  if (v.gone) return `<div class="vrow">${thumbHtml(v, ch)}
+    <div class="vinfo"><span class="t gone">${esc(v.title)}</span>
+    <div class="m">uploaded ${agoText(v.date, S.simToday)} · this video has since been deleted — part of lost internet history</div></div></div>`;
+  const isNew = v.date === S.simToday;
+  const by = showCh ? `<a href="#" onclick="openChannel('${ch.key}');return false;">${esc(ch.name)}</a>` : esc(ch.real && v.by ? v.by : ch.name);
+  return `<div class="vrow">${thumbHtml(v, ch)}
+    <div class="vinfo">
+      <a href="#" class="t" onclick="openVideo('${v.id}');return false;">${esc(v.title)}</a>${isNew ? '<span class="newbadge">NEW</span>' : ""}
+      <div class="m">by ${by} · ≈${fmt(simViews(v, S.simToday))} views (est.) · uploaded ${agoText(v.date, S.simToday)}</div>
+      <div class="d">${esc(v.desc || "")}</div>
+    </div></div>`;
+}
+
+function header(){
+  return `<div id="hdr"><div class="wrap">
+    <div class="logo" onclick="goHome()"><span class="arrow">⏪</span> <span class="rw">Rewound</span><span class="tag">watch the internet like it's then</span></div>
+    <div class="searchbox"><input id="q" placeholder="Search your timeline" value="${esc(S.q)}" oninput="setQ(this.value)"><button>Search</button></div>
+  </div></div>`;
+}
+function timebar(){
+  if (S.page === "setup") return "";
+  const dayN = diffDays(S.anchor.zeroSim || S.anchor.simStart, S.simToday) + 1;
+  return `<div id="timebar"><div class="wrap">
+    <span class="today">📅 It's ${prettyDate(S.simToday)}</span>
+    <span class="dayn">day ${fmt(dayN)} of your timeline · advances daily with the real world</span>
+    <span class="ffwd"><span class="lbl">fast-forward (permanent):</span>
+      <button class="btn" onclick="ffwd(1)">+1 day</button>
+      <button class="btn" onclick="ffwd(7)">+1 week</button>
+      <button class="btn" onclick="ffwdNextUpload()">⏭ next upload</button>
+    </span>
+  </div></div>`;
+}
+
+function setupPage(){
+  const cards = CH.map(c => `
+    <div class="chcard ${c.sample || c.keep ? "" : "sel"}" data-key="${c.key}" onclick="toggleCard(this)">
+      <div class="top">${avatarHtml(c)}
+        <div><b>${esc(c.name)}</b><span class="pill ${c.sample ? "sample" : "real"}">${c.sample ? "SAMPLE DATA" : "REAL VIDEOS"}</span>
+        <div class="meta">First upload: ${prettyDate(firstUpload(c))}${firstSurviving(c) !== firstUpload(c) ? " · first surviving: " + prettyDate(firstSurviving(c)) : ""}</div></div>
+      </div>
+      <div class="blurb">${esc(c.blurb || "")}</div>
+    </div>`).join("");
+  const quick = CH.slice(0, 4).map(c =>
+    `<button class="btn" onclick="quickDate('${firstSurviving(c)}')">${esc(c.name)}'s day one</button>`).join(" ");
+  return `<div id="setup" class="wrap">
+    <div class="logo biglogo"><span class="arrow">⏪</span> <span class="rw">Rewound</span></div>
+    <div class="tagline">Subscribe like it's day one. Time moves forward one real day at a time.</div>
+    <div class="steph">1. Pick your subscriptions</div>
+    <div class="chgrid">${cards}</div>
+    <div class="steph">2. Pick your day zero</div>
+    <div class="daterow"><input type="date" id="startDate" value="2010-10-02" min="2005-04-23" max="${todayISO()}"> ${quick}</div>
+    <div style="margin-top:26px"><button class="btn btn-go" onclick="beginTimeline()">⏰ Begin my timeline</button></div>
+    <div class="note">Calendar mode: open Rewound tomorrow and it's the next day there too — skip a day, you skip a day there.<br>
+    Sample channels are placeholders until the corpus is built from the YouTube Data API (see README). Not affiliated with YouTube.</div>
+  </div>`;
+}
+
+function bannerHtml(){
+  if (!S.banner) return "";
+  return `<div id="banner">⏪ <b>While you were away</b> — ${S.banner.days} day${S.banner.days===1?"":"s"} passed: ${S.banner.count} new upload${S.banner.count===1?"":"s"} from your subscriptions since ${prettyDate(S.banner.since)}.
+    <span class="x" onclick="dismissBanner()">✕ dismiss</span></div>`;
+}
+
+function homePage(){
+  const todayVids = subVideos(S.simToday).filter(v => v.date === S.simToday);
+  let recent = subVideos(S.simToday).filter(v => v.date !== S.simToday).slice(0, 10);
+  if (S.q) recent = recent.filter(v => v.title.toLowerCase().includes(S.q));
+  const popular = allVideos(S.simToday).map(v => ({ ...v, sv: simViews(v, S.simToday) }))
+    .sort((a,b) => b.sv - a.sv).slice(0, 6);
+  const future = subbed().flatMap(c => c.videos.filter(v => !v.gone).map(v => ({ d:v.date, n:c.name }))).filter(x => x.d > S.simToday).sort((a,b) => a.d < b.d ? -1 : 1);
+  const nextHint = future.length ? `<div class="hint">⏳ Next upload from your subscriptions: <b>${esc(future[0].n)}</b> in ${diffDays(S.simToday, future[0].d)} day${diffDays(S.simToday, future[0].d)===1?"":"s"} — or fast-forward to it.</div>` : "";
+
+  const newSec = todayVids.length
+    ? todayVids.map(v => vrow(v, v._ch, true)).join("")
+    : `<div class="empty">No uploads from your subscriptions today.</div>${nextHint}`;
+
+  const channels = CH.map(c => {
+    const started = firstUpload(c) <= S.simToday;
+    const isSub = S.anchor.subs.includes(c.key);
+    return `<div class="chiprow" onclick="openChannel('${c.key}')">${avatarHtml(c)}
+      <span class="nm">${esc(c.name)}</span>
+      <span class="st">${isSub ? "✓ subscribed" : started ? "" : "not yet…"}</span></div>`;
+  }).join("");
+
+  return `<div class="wrap">${bannerHtml()}
+    <div class="cols">
+      <div class="main">
+        <div class="sec"><h3>New from your subscriptions — ${prettyDate(S.simToday)}</h3>${newSec}</div>
+        <div class="sec"><h3>Recent uploads</h3>${recent.map(v => vrow(v, v._ch, true)).join("") || '<div class="empty">Nothing yet — your channels haven\'t started uploading.</div>'}</div>
+        <div class="sec"><h3>Popular right now</h3>${popular.map(v => vrow(v, v._ch, true)).join("")}</div>
+      </div>
+      <div class="side">
+        <div class="sidebox"><h4>Channels</h4>${channels}</div>
+        <div class="sidebox"><h4>Your timeline</h4>
+          <p>Started ${prettyDate(S.anchor.zeroSim || S.anchor.simStart)} · calendar mode.</p>
+          <p><button class="btn" onclick="copySaveLink()">📎 Copy save link</button></p>
+          <p>The save link restores this timeline on any device or browser.</p>
+          <p><a href="#" onclick="resetTimeline();return false;">End timeline &amp; start over</a></p>
+        </div>
+        <div class="sidebox"><h4>About the numbers</h4>
+          <p>View and subscriber counts are <b>estimates</b>, back-simulated for the date you're visiting. Real videos play in YouTube's official player.</p>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+function channelPage(){
+  const c = chOf(S.channelKey);
+  if (!c) return `<div class="wrap empty">Channel not found.</div>`;
+  let vids = c.videos.filter(v => v.date <= S.simToday).sort((a,b) => a.date < b.date ? 1 : -1);
+  if (S.q) vids = vids.filter(v => v.title.toLowerCase().includes(S.q));
+  const started = firstUpload(c) <= S.simToday;
+  const isSub = S.anchor.subs.includes(c.key);
+  const subs = subsAt(c, S.simToday);
+  const lost = c.videos.filter(v => v.gone && v.date <= S.simToday).length;
+  return `<div class="wrap">
+    <div class="chhead">${avatarHtml(c)}
+      <div><h2>${esc(c.name)}</h2>
+      <div class="stats">${started ? `${subs ? "≈" + fmt(subs) + " subscribers (est.) · " : ""}${vids.filter(v=>!v.gone).length} videos${lost ? ` · ${lost} lost to time` : ""}` : `Doesn't exist yet — first upload ${prettyDate(firstUpload(c))}`}</div></div>
+      <span style="margin-left:auto"><button class="btn btn-sub ${isSub ? "on" : ""}" onclick="toggleSub('${c.key}')">${isSub ? "✓ Subscribed" : "Subscribe"}</button></span>
+    </div>
+    ${c.sample ? `<div class="sampletag">ℹ️ Sample data. Run the "Refresh corpus" GitHub Action with your API key to replace this with the channel's real uploads.</div>` : ""}
+    ${vids.length ? vids.map(v => vrow(v, c, false)).join("") : `<div class="empty">${started ? "No uploads match." : "Come back when their first video drops — or fast-forward to it."}</div>`}
+  </div>`;
+}
+
+function watchPage(){
+  const v = findVideo(S.watchId), ch = chOfVideo(S.watchId);
+  if (!v || !ch) return `<div class="wrap empty">Video not found.</div>`;
+  const views = simViews(v, S.simToday);
+  const likes = Math.round(views * (0.006 + rnd(v.id+"l") * 0.006));
+  const dislikes = Math.round(likes * (0.03 + rnd(v.id+"d") * 0.05));
+  const pct = likes + dislikes ? Math.round(likes / (likes + dislikes) * 100) : 100;
+  let player;
+  if (v.gone) {
+    player = `<div class="player"><div class="ph gone"><span class="e">✖</span><span>This video is no longer available.<br>It was deleted at some point between then and now.</span></div></div>`;
+  } else if (ch.sample) {
+    player = `<div class="player"><div class="ph" style="${avStyle(ch)}"><span class="e">${v.e || "🎬"}</span><span>Sample video — real corpus embeds the actual upload here</span></div></div>`;
+  } else if (v.embeddable === false) {
+    player = `<div class="player"><div class="ph" style="background:#181818"><span class="e">▶️</span><span>The uploader disabled embedding for this video.</span>
+      <a class="btn" style="color:#000" href="https://www.youtube.com/watch?v=${v.id}" target="_blank" rel="noopener">Watch on YouTube</a></span></div></div>`;
+  } else {
+    player = `<div class="player"><iframe src="https://www.youtube-nocookie.com/embed/${v.id}" allowfullscreen title="${esc(v.title)}"></iframe></div>
+      <div style="font-size:11px;color:#999;margin-top:4px">Player not loading? <a href="https://www.youtube.com/watch?v=${v.id}" target="_blank" rel="noopener">Open on YouTube</a>.</div>`;
+  }
+  const related = subVideos(S.simToday).filter(x => x.id !== v.id && !x.gone)
+    .sort((a,b) => (a._ch.key === ch.key ? -1 : 0) - (b._ch.key === ch.key ? -1 : 0)).slice(0, 7)
+    .map(x => `<div class="srow">${thumbHtml(x, x._ch)}
+      <div><a href="#" class="t" onclick="openVideo('${x.id}');return false;">${esc(x.title)}</a>
+      <div class="m">≈${fmt(simViews(x, S.simToday))} views (est.)</div></div></div>`).join("");
+  return `<div class="wrap">
+    <div style="font-size:11px;padding-top:10px"><a href="#" onclick="goBack();return false;">« Back</a></div>
+    <div class="watch">
+      <div class="wmain">
+        <h1>${esc(v.title)}</h1>
+        <div style="font-size:12px;color:#666;margin-bottom:7px">by <a href="#" onclick="openChannel('${ch.key}');return false;"><b>${esc(ch.real && v.by ? v.by : ch.name)}</b></a> · uploaded ${agoText(v.date, S.simToday)}</div>
+        ${player}
+        <div class="statrow">
+          <span class="views">≈${fmt(views)} views <span class="est">(est. for ${prettyDate(S.simToday)})</span></span>
+          <span><div class="ratebar"><div style="width:${pct}%"></div></div>
+          <div class="ratenums">👍 ≈${fmt(likes)} &nbsp; 👎 ≈${fmt(dislikes)} &nbsp; (est.)</div></span>
+        </div>
+        <div class="descbox"><b>Uploaded ${prettyDate(v.date)}</b><br>${esc(v.desc || "")}</div>
+      </div>
+      <div class="sidebar side"><div class="sec"><h3>From your timeline</h3>${related || '<div class="empty">Nothing else exists yet…</div>'}</div></div>
+    </div>
+  </div>`;
+}
+
+function footer(){
+  if (S.page === "setup") return "";
+  return `<div id="ftr"><div class="wrap">
+    Rewound is a time-machine viewer: data refreshed weekly from the YouTube Data API, playback via YouTube's official embedded player, nothing rehosted.
+    View/subscriber figures shown with ≈ are estimates simulated for the displayed date. Deleted videos appear as unavailable. Not affiliated with YouTube.
+  </div></div>`;
+}
+
+function renderInto(){
+  const fn = { setup: setupPage, home: homePage, channel: channelPage, watch: watchPage }[S.page];
+  document.getElementById("content").innerHTML = fn();
+}
+function render(){
+  document.getElementById("app").innerHTML = header() + timebar() + `<div id="content"></div>` + footer();
+  renderInto();
+  const q = document.getElementById("q");
+  if (q && S.q) { q.focus(); q.setSelectionRange(q.value.length, q.value.length); }
+}
+
+boot();
+</script>
+</body>
+</html>
