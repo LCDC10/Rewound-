@@ -578,8 +578,7 @@ function setupPage(){
     <label class="chrow" data-name="${esc(c.name.toLowerCase())}">
       <input type="checkbox" class="chk" data-key="${c.key}" onchange="updateSelCount()">
       ${avatarHtml(c)}
-      <span><span class="nm">${esc(c.name)}</span><span class="pill ${c.sample ? "sample" : "real"}">${c.sample ? "SAMPLE" : "REAL"}</span>
-      <div class="meta">first upload ${prettyDate(firstUpload(c))}${firstSurviving(c) !== firstUpload(c) ? " · survives from " + prettyDate(firstSurviving(c)) : ""}</div></span>
+      <span><span class="nm">${esc(c.name)}</span>${c.sample ? '<span class="pill sample">SAMPLE</span>' : ""}      <div class="meta">first upload ${prettyDate(firstUpload(c))}${firstSurviving(c) !== firstUpload(c) ? " · survives from " + prettyDate(firstSurviving(c)) : ""}</div></span>
     </label>`).join("");
   const dayOneOpts = sorted.map(c => `<option value="${firstSurviving(c)}">${esc(c.name)} — ${prettyDate(firstSurviving(c))}</option>`).join("");
   const groupSection = sb ? `
